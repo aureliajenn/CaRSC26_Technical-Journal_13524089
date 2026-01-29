@@ -1,0 +1,287 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{datetime2}
+\usepackage{float}
+
+\definecolor{codegray}{rgb}{0.95,0.95,0.95}
+
+\lstset{
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{teal},
+}
+
+\title{Technical Journal}
+\author{Aurelia Jennifer Gunawan\\13524089}
+\date{Last Updated: 2026-01-30}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Catatan Pendidikan}
+\subsection{Arsitektur Sistem UAV}
+\subsubsection{Komponen" UAV}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{diagram_komponen.png}
+    \label{fig:placeholder}
+\end{figure}
+Wahana terdiri atas airframe dan sistem propulsi. Airframe pada pesawat terdiri atas fuselage, sayap, dan ekor. Airframe pada drone terdiri atas frame atau center plate, dan arm. Sistem propulsi terdiri atas tiga komponen: 
+\begin{itemize}
+    \item Propeller\\Menghasilkan gaya angkat/dorong melalui rotasi.
+    \item Motor\\Mengubah energi listrik menjadi energi kinetik rotasi untuk memutar \textit{propeller}
+    \item Electronic Speed Controller (ESC)\\Mengatur kecepatan dan arah putaran motor sesuai perintah dari FC
+    \item Baterai Lithium Polymer (LiPo)\\Sumber energi utama
+\end{itemize}
+\textit{Flight controller} berperan sebagai sistem saraf motorik dari UAV yang memproses dan menyatukan data dari sensor serta menjalankan algoritma kontrl untuk mengendalikan penerbangan, baik berdasarkan perintah pilot (dari GCS0 maupun secara otonom (dari companion computer). FC terdiri atas beberapa \textit{chip} atau unit:
+\begin{itemize}
+    \item Microcontroller Unit (MCU)
+    Prosesor utama yang menjalankan \textit{firmware} dan mengolah semua data dan logika kontrol penerbangan
+    \item Barometer\\Mengukur tekanan atmosfer untuk mengestimasi ketinggian wahana
+    \item Inertial Measurement Unit (IMU)
+    Mengintegrasikan \textit{accelerometer} dan \textit{gyroscope} yang mengukur percepatan, kecepatan sudut, dan orientasi UAV untuk mengetahui pergerakannya.
+    \item Blackbox
+    Mencatat log keseluruhan UAV sejak arm hingga disarm, untuk analisis pasca penerbangan.
+    \item Modul GNSS
+    Menerima sinyal dari sistem navihasi satelit global, seperti GPS, GLONASS, Galileo, dan BeiDou untuk menentukan posisi, kecepatan, dan waktu UAV.
+    \item Airspeed sensor
+    Mengukur kecepatan relatif wahana terhadap udara menggunakan tabung pitot
+    \item Magnetometer (kompasnya UAV)
+    Mendeteksi medan magnet bumi untuk menentukan arah mata angin yang dituju wahana. Biasanya terintegrasi dalam modul GNSS sebagai \textit{chip} kompas.
+\end{itemize}
+Payload dapat berupa: 
+\begin{itemize}
+    \item Kamera FPV
+    Menyediakan video real time ke pilot/GCS
+    \item Kamera Depth
+    Menghasilkan peta kedalaman/\textit{depth map} dan titik 3D secara real-time
+    \item Kamera Tracking
+    Mengestimasi posisi dan orientasi UAV secara real time tanpa GPS
+    \item LiDAR
+    Sensor pemetaan 3D high precision untuk misi survei topografi dan kehutanan
+    \item Sensor Partikel
+    Sensor untuk memantau kualitas udara
+    \item and more...
+\end{itemize}
+Ground control station (GCS) adalah sistem di darat untuk memantau, mengendalikan, dan mengelola misi uAV lewat gelombang radio. GCS terdiri atas remote controller, laptop dan aplikasi GCS, modul radio telemetry, dan antena yagi. UAV dan GCS melakukan komunikasi dengan \textbf{gelombang radio} pada spektrum frekuensi tertentu. Jalur komunikasi fungsional yang terbentuk dari pertukaran data lewat frekuensi ini disebut dengan \textbf{link}. Terdapat dua jenis link utama dalam sistem UAV:
+\begin{enumerate}
+    \item C2/Data/Radio/Non-payload Link
+    Saluran utama yang bertanggung jawab atas pengendalian UAV. Secara fisik hubungan ini dijalin antara \textit{radio transceiver} di GCS dan di UAV.
+    Terdiri atas: 
+    \begin{itemize}
+        \item Uplink (\textit{telecommand}) mengirimkan perintah kendali dari GCS/pilot ke UAV
+        \item Downlink (\textit{telemetry}) mengirimkan data status UAV (attitude, baterai, GPS, ketinggian, dsb.) ke GCS
+    \end{itemize}
+    \item Payload Link
+    Saluarn khusus untuk mengirimkan data dari payload ke GCS secara real-time. Untuk kamera, link ini dijalin secara fisik antara VTX (video transmitter) dan VRX (video receiver)
+\end{enumerate}
+Companion computer adalah "otak" yang melakukan komputasi tingkat tinggi, yang melengkapi FC. CC disambungkan ke FC secara serial dan berkomunikasi dengan protokol MAVLINK. Payload dan sensor memberikan data ke CC untuk mengambil keputuasn, lalu CC mengirimkan perintah ke FC untuk dieksekusi. 
+
+\subsubsection{Komunikasi}
+Terdapat dua cara mengirim data:
+\begin{enumerate}
+    \item Wired
+    \begin{itemize}
+        \item Digunakan untuk komunikasi jarak pendek antarkomponen
+        \item Media fisik berupa kabel tembaga
+        \item Laju transfer sangat tinggi, latensi rendah, dan lebih baik dari segi keamanan, tapi jangkauannya terbatas
+    \end{itemize}
+    \item Wireless
+    \begin{itemize}
+        \item Digunakan untuk komunikasi jarak jauh, misalnya antara GCS dan UAV
+        \item Media fisik berupa gelombang radio dari transceiver
+        \item Mobilitas lebih tinggi, tapi rentan interferensi dan bandwidth, serta latensi terbatas
+    \end{itemize}
+\end{enumerate}
+Proses pengiriman data diatur oleh \textbf{protokol}. Protokol mengatur: 
+\begin{enumerate}
+    \item sintaks: cara menyusun struktur data
+    \item semantik: makna dari setiap bit data
+    \item sinkronisasi: keselarasan kecepatan pengiriman data
+\end{enumerate}
+Wired: \begin{enumerate}
+    \item UART (Universal Asynchronous Receiver-Transmitter)
+    \begin{itemize}
+        \item Bersifat \textbf{asinkron}. Pengirim dan penerima menyepakati laju pengiriman data (baud rate, bit/s), panjang data, dan bit (0 atau 1) untuk menandakan awal dan akhir satu pesan. 
+        \item Mempunyai dua pin, yaitu \textbf{RX} dan \textbf{TX}. RX untuk menerima data dari perangkat lain. TX untuk mengirim data ke perangkat lain. 
+        \item Digunakan untuk menghubungkan FC ke modul telemtri, GPS, dan CC.
+    \end{itemize}
+    \item SPI (Serial Peripheral Interface)
+    \begin{itemize}
+        \item Bersifat \textbf{sinkron}. 
+        \item Mempunyai empat pin, yaitu \textbf{SCLK, MOSI, MISO}, dan \textbf{SS}. SCLK mirip SCL di I2C. MOSI adalah jalur data dari master ke slave. MISO jalur data dari slave ke master. SS adalah pin untuk memilih slave mana yang diajak bicara. 
+        \item Digunakan untuk menghubungkan FC (master) dengan komponen kritikal (slave) dengan data padat seperti IMU dan blackbox
+    \end{itemize}
+    \item I2C (Inter-Integrated Circuit)
+    \begin{itemize}
+        \item Bersifat \textbf{sinkron}. 
+        \item Mempunyai dua pin, yaitu SDA dan SCL. SDA adalah jalur dua arah untuk mengirim dan menerima data. SCL membawa sinyal detak dari master untuk sinkronisasi. 
+        \item Digunakan untuk menghubungkan FC ke sensor berkecepatan rendah seperti airspeed sensor dan barometer
+    \end{itemize}
+\end{enumerate}
+Wireless: 
+\begin{enumerate}
+    \item TCP (Transmission Control Protocol)
+    \begin{itemize}
+        \item Sebelum mengirim data, pengirim dan penerima melakukan \textit{\textbf{handshake}} untuk memastikan kesiapan pengiriman data. 
+        \item Kalau ada data yang hilang/rusak di tengah jalan, pengirim berhenti dan mengirim ulang data tsb sampai diterima secara sempurna. 
+        \item Digunakan untuk \textbf{upload waypoints} atau \textbf{mengubah parameter}, karena merupakan informasi krusial yang tidak boleh salah satu bit pun (dapat berakibat fatal), dan reliability diprioritaskan.
+    \end{itemize}
+    \item UDP (User Datagram Protocol)
+    \begin{itemize}
+        \item Data dikirim terus menerus tanpa memedulikan apakah penerima sudah siap atau data sampai secara sempurna.
+        \item Pengiriman data sangat cepat dengan latensi rendah, tapi tidak reliable
+        \item Digunakan untuk \textbf{streaming video dan data telemtry secara real time}
+    \end{itemize}
+\end{enumerate}
+
+Setiap data yang dikirim umumnya dikemas berdasarkan protokol perangkat lunak untuk UAV, seperti MAVLink (Micro Air Vehicle Link). MAVLink adalah protokol komunikasi pesan \textit{open source} yang sangat ringan dan penting karena jaringan nirkabel memiliki \textit{bandwidth} yang terbatas.
+\begin{itemize}
+    \item Setiap wahana UAV memiliki system ID (1-255) dan setiap komponen dalam wahana memiliki component ID. 
+    \item UAV mengirimkan pesan HEARTBEAT secara rutin untuk memberi tahu GCS bahwa koneksi masih aktif dan sistem dalam keadaan normal. 
+    \item MAVLink lebih sering menggunakan UDP (kalau pake TCP akan ada delay yang berpotensi membuat wahana \textit{crash}. MAVLink memiliki \textit{checksum}, kode verifikasi yang dihasilkan secara matematis dari isi pesan itu sendiri sehingga ketidakcocokan \textit{checksum} akan mengakibatkan paket data terbuang.)
+\end{itemize}
+\subsubsection{Logika Operasi}
+System state dan flight mode menentukan seberapa besar kontrol pilot dibandingkan dengan kontrol otomatis oleh FC dan apa yang dilakukan wahana dalam suatu kondisi/mode. 
+\begin{itemize}
+    \item \textbf{System State}
+    Sebelum terbang, wahana harus melewati tahapan status berikut: 
+    \begin{enumerate}
+        \item \textbf{Initialization}:  FC melakukan kalibrasi sensor internal tepat setelah baterai dihubungkan. 
+        \item \textbf{Pre-arm Check}: Diagnosa otomatis yang dilakukan wahana untuk memastikan kondisinya layak terbang.
+        \item \textbf{Disarm}: Kondisi standar saat di darat. Motor terkunci total dan tidak akan berputar. 
+        \item \textbf{Arm}: Kondisi aktif, motor mulai berputar pada kecepatan rendah dan wahana siap menerima input \textit{throttle} untuk lepas landas. 
+    \end{enumerate}
+    \item \textbf{Flight Mode}
+    Berikut adalah beberapa contoh mode terbang untuk ArduPilot:
+    \begin{enumerate}
+        \item \textbf{Acro}: Kendali penuh tanpa stabilisasi otomatis.
+        \item \textbf{Stabilize}: Wahana otomatis kembali datar jika stick dilepas.
+        \item \textbf{Alt-Hold}: Menjaga ketinggian otomatis, posisi horizontal tetap diatur manual.
+        \item \textbf{Loiter}: Menjaga koordinat dan ketinggian secara statis di udara.
+        \item \textbf{RTL/RTH (Return To Land/Home)}: Kembali ke titik landas/home.
+        \item \textbf{Auto}: Menjalankan misi berdasarkan waypoints yang telah ditentukan.
+        \item \textbf{Guided}: Bergerak secara interaktif berdasarkan input pada peta di GCS. 
+    \end{enumerate}
+\end{itemize}
+\textbf{Mekanisme Failsafe} adalah prosedur otomatis yang dilakukan UAV ketika terjadi kegagalan sistem untuk mencegah \textit{crash} atau kehilangan wahana. Beberapa pemicu failsafe meliputi: 
+\begin{itemize}
+    \item \textbf{RC Link Lost}: sinyal antara \textit{remote control} dan \textit{receiver} di UAV terputus
+    \item \textbf{GCS Link Lost}: koneksi telemetri antara GCS dan UAV terputus
+    \item \textbf{Low Battery}
+    \item \textbf{EKF Check/GPS Glitch}
+    \item \textbf{Fence Breach}: wahana keluar dari batas wilayah geografis yang sudah ditentukan (geofence).
+\end{itemize}
+Beberapa tindakan yang diambil FC dalam kondisi failsafe (di-configure sebelumnya) adalah: 
+\begin{itemize}
+    \item RTL
+    \item Land
+    \item Brake
+    \item and more...
+\end{itemize}
+
+\subsection{Dasar Pemrograman}
+\subsubsection{Konsep Dasar OOP}
+Why  OOP?
+\begin{itemize}
+    \item Fokus pada objek yang memodelkan benda nyata (data + perilaku)
+    \item Modularitas tinggi, kode bisa dipecah menjadi bagian" (class)
+    \item Rapi, terstruktur, dan mudah di-maintenance
+Class = skematik/datasheet komponen (rancangan)
+Object = Komponen fisik yang sudah dirakit
+Sebuah class memiliki atribut (variabel yang menyimpan data), dan metode (fungsi/prosedur yang mendefinisikan tindakan atau perilaku yang bisa dilakukan oleh class tersebut). 
+\textbf{Encapsulation} :
+\begin{enumerate}
+    \item Membungkus data sensitif agar tidak bisa diakses sembarangan dari luar. Akses untuk membaca dan mengubah data dilakukan dengan \textit{getter} dan \textit{setter}.
+    \item Menentukan siapa yang bisa mengakses suatu atribut/method dari suatu kelas dengan access modifier:
+    
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{cccc}
+            \textbf{Modifier} & \textbf{Own Class} & \textbf{Derived Class} & \textbf{Main()}\\
+            \textbf{Public} & Yes & Yes & Yes\\
+            \textbf{Protected} & Yes & Yes & No\\
+            \textbf{Private} & Yes & No & No\\
+        \end{tabular}
+    \end{table}
+\end{enumerate}
+\textbf{Abstraction} bertujuan untuk menyembunyikan proses/cara kerja di belakang layar.
+
+\textbf{Inheritance} (based on prinsip Don't Repeat Yourself/DRY). Parent class/base class adalah class yang mewariskan sifat. Child class/derived class adalah class yang mewarisi sifat dari parent.
+
+\textbf{Polymorphism} adalah prinsip yang memungkinkan respon yang berbeda-beda berdasarkan perintah yang sama, tergantung object. 
+\end{itemize}
+
+\subsubsection{Design Pattern}
+Pola umum yang digunakan untuk mempermudah pengembangan aplikasi.\\
+\textbf{Producer-Consumer Pattern} adalah pola desain konkuren, di aman satu atau lebih thread producer menghasilkan objek yang diantreankan, lalu dikonsumsi oleh satu atau lebih consumer. Objek yang diantreankan umumnya mewakili beberapa pekerjaan yang perlu dilakukan.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{producer-consumer.png}
+\end{figure}
+
+\subsubsection{Error Handling}
+Mekanisme \textbf{Try-Catch}: 
+\begin{itemize}
+    \item Blok try berisi kode yang dicoba untuk dijalankan
+    \item Kalau ada error pindah ke block catch dengan Exception yang sesuai
+    \item better than if-else karena dapat lebih mengcover error tak terduga
+\end{itemize}
+
+\subsubsection{Virtual Function}
+Virtual function adalah fungsi parent class/base class yang dideklarasikan dengan kata kunci virtual, dan di-override dala child class/derived class. Fungsi virtual memungkinkan \textit{runtime polymorphism}, dimana fungsi yang tepat dipanggil melalu base class pointer atau reference.
+
+\subsubsection{Pengenalan Pemrograman Konkuren}
+\textbf{Multithreading}
+\begin{itemize}
+    \item Thread adalah unit terkecil dari proses
+    \item Multithreading adalah teknik memecah proses menjadi task kecil yang dijalankan oleh thread di dalamnya sehingga bisa berjalan secara konkuren/bersama. 
+    \item Problems? Race condition, dan deadlock!
+\end{itemize}
+\textbf{Race condition}: 
+\begin{itemize}
+    \item thread saling mengakses resources yang sama, maka dapat terjadi rebutan resources antar thread.
+    \item solusi: use \textbf{mutex/lock} sehingga hanya satu thread yang bisa mengakses suatu resource di suatu waktu.
+\end{itemize} 
+\textbf{Deadlock}: 
+\begin{itemize}
+    \item dua atau lebih proses/pihak dapat saling menunggu resources yang dipegang oleh pihak lain
+    \item solusi: 
+    \begin{enumerate}
+        \item deadlock prevention: menghilangkan salah satu syarat kondisi terjadinya deadlock, yaitu mutual exclusion, hold and wait, no preemption, dan circular wait. 
+        \item deadlock avoidance dengan banker's algorithm (memeriksa secara dinamis status alokasi resource untuk memastikan sistem tidak memasuki unsafe state)
+        \item deadlock detection and recovery dengan timeout dan deteksi cycle. 
+    \end{enumerate} 
+\end{itemize}
+
+
+\section{Hands-on/THT}
+
+\subsection{Kendala}
+
+\subsection{Upaya Penyelesaian}
+
+\newpage
+
+\section{Referensi}
+\begin{itemize}
+    \item \href{https://refactoring.guru/deisgn-patterns}{Design Patterns}
+    \item \href{https://jenkov.com/tutorials/java-concurrency/producer-consumer.html}{The Producer Consumer Pattern}
+    \item PPT materi saat day pendidikan
+\end{itemize}
+
+\end{document}

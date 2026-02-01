@@ -5,11 +5,9 @@ Repository ini berisi dokumen technical journal yang ditulis menggunakan **LaTeX
 
 ```text
 .
-├── docs
+├── docs/
 │   ├── main.tex
-│   ├── diagram_komponen.png
-│   ├── producer-consumer.png
 │   └── Technical_journal.pdf
+├── img/
 ├── README.md
 ```
-~

@@ -268,19 +268,157 @@ Virtual function adalah fungsi parent class/base class yang dideklarasikan denga
     \end{enumerate} 
 \end{itemize}
 
+\subsection{MAVLink}
+\subsubsection{Pendahuluan}
+MAVLink atau Micro Air Vehicle Link adalah protokol komunikasi pesan open source yang sangat ringan, yang penting karena jaringan nirkabel memiliki bandwidth terbatas. MAVLink mendukung komunikasi dua arah yang efisien dan memungkinkan integrasi wahana UAV denagn jaringan internet. 
+\subsubsection{System ID, Component ID, Message ID}
+Setiap entitas yang bisa mengirim atau menerima pesan MAVLink harus punya identitas unik. Suatu sistem MAVLink (wahana/GCS) bisa memiliki banyak komponen. 
+\begin{enumerate}
+    \item System ID
+    \begin{itemize}
+        \item Identitas unik satu sistem UAV.
+        \item Rentang nilai 1-255.
+        \item System ID 255 dialokasikan untuk GCS.
+        \item Semua komponen dalam wahana yang sama memiliki system ID yang sama.
+    \end{itemize}
+    \item Component ID
+    \begin{itemize}
+        \item Identitas spesifik untuk setiap komponen atau subsistem dalam satu wahana.
+        \item Sudah ada penomoran bawaannya dari MAVLink, i.e. FC: 1, Kamera: 100-105, Gimbal: 154, CC: 191-194.
+    \end{itemize}
+\end{enumerate}
+MAVLink punya berbagai jenis pesan untuk pertukaran data antarkomponen dalam sistem UAV. Setiap pesan memiliki message ID yang unik. Untuk MAVLink v1 ada 255, untuk MAVLink v2 hingga 16 juta. Dialect adalah kumpulan pesan yang dapat disesuaikan dengan kebutuhan sistem tertentu. Berdasarkan tujuannya, message dibagi menjadi dua macam: 
+\begin{enumerate}
+    \item State messages: dikirim dari wahana ke GCS untuk melaporkan status (posisi, orientasi, baterai, dsb.)
+    \item Command messages: dikirim dari GCS ke wahana untuk mengeksekusi aksi atau misi tertentu (event based)
+\end{enumerate}
 
-\section{Hands-on/THT}
+\subsubsection{Pola Interaksi dengan MAVLink}
+\begin{enumerate}
+    \item Streaming (Telemetri)
+    \begin{itemize}
+        \item Dipakai untuk \textbf{data yang harus dipantau terus-menerus} secara real-time, yaitu pesan bertipe \textbf{state messages}. Contohnya heartbeat, attitude, global\_position\_int
+        \item Bersifat \textbf{broadcast} atau \textbf{satu arah} secara periodik dari wahana ke GCS
+        \item Mengandalkan message ID untuk menentukan jenis data tanpa alamat tujuan spesifik
+    \end{itemize}
+    \item Microservices
+    \begin{itemize}
+        \item Dipakai untuk \textbf{perintah kritis yang butuh konfirmasi}, yaitu pesan bertipe \textbf{command messages}. Contohnya upload/download waypoint, instruksi arm/disarm/takeoff/land, dan membaca/mengubah pengaturan internal (parameter) pada FC.
+        \item Bersifat \textbf{point-to-point} atau \textbf{dua arah}, seperti client-service
+        \item Menggunakan system ID dan component ID agar perintah tidak salah sasaran.
+    \end{itemize}
+\end{enumerate}
+\subsubsection{Anatomi Paket MAVLink}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{anatomimav.png}
+\end{figure}
+\begin{itemize}
+    \item Setiap paket dimulai dengan STX (0XFD) sebagai penanda bahwa paket tersebut menggunakan protokol MAVLink
+    \item SYS\_ID (System ID) dan COMP\_ID (Component ID) untuk identitas
+    \item MSG\_ID (Message ID) untuk jenis message yang dikirim
+    \item PAYLOAD untuk membungkus konten data utama
+    \item Checksum memastikan paket tidak corrupt saat diterima, menggunakan algoritma CRC-16 (ITU X.25) untuk menghasilkan kode verifikasi 2-byte (CKA dan CKB) dengan data dari LEN hingga PAYLOAD
+    \item SIGNATURE adalah tanda tangan digital (SHA-256) untuk memastikan bahwa paket MAVLink yang diterima berasal dari pihak terpercaya. 
+\end{itemize}
+\subsubsection{MAVLink Interfaces}
+\begin{enumerate}
+    \item MAVProxy: CLI-based GCS, yang sangat ringan dan stabil
+    \item MAVSDK: Software development kit untuk membangun aplikasi berbasis MAVLink dengan bahasa tingkat tinggi (C++, Python, dsb.)
+    \item MAVROS (MAVLink + ROS): Penerjemah antara MAVLink dan ROS pada drone berbasis ROS
+\end{enumerate}
+\subsection{Software In The Loop (SITL)}
+\subsubsection{Pendahuluan}
+Software in the loop (SITL) adalah metode untuk menjalankan dan menguji sistem autopilot wahana UAV tanpa menggunakan perangkat keras fisik. Dalam SITL, FC dan lingkungan (hukum fisika) disimulasikan oleh perangkat lunak. Selain itu, flight stack, seperti ardupilot/PX4, dijalankan seperti program biasa di komputer. Pengujian melalui SITL bertujuan untuk memeriksa ketepatan implementasi logika navigasi karena tidak ada risio kerusakan fisik akibat crash
 
-\subsection{Kendala}
+\subsubsection{Arsitektur sistem SITL}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{arsitekturSITL.png}
+\end{figure}
+Arsitektur SITL memisahkan simulasi fisik dan logika kontrol drone. Gazebo untuk simulasi fisik, yang menghasilkan data sensor virtual (flight datam vehicle state, sensor data, dsb.). Data sensor virtual dikirim ke Ardupilot SITL melalui protokol UDP. Ardupilot mensimulasikan FC, yang memproses data sensor dengan algoritma navigasi, EKF, dan kontrol untuk menghitung perintah motor. Ardupilot akan mengirim kembali output motor ke Gazebo agar pergerakan drone di-update. Di sisi lain, Ardupilot berkomunikasi dengan MAVProxy melalui protokol TCP untuk menerima perintah kontrol, mengirim waypointm dan mengendalikan misi. Selain itu, MAVProxy juga mengirimkan data motor speeds dan output commands ke Ardupilot melalui protokol UDP. 
 
-\subsection{Upaya Penyelesaian}
+\subsubsection{Tools}
+\begin{enumerate}
+    \item Ardupilot: flight stack untuk mensimulasikan FC
+    \item Gazebo harmonic: simulasi fisika dan lingkungan serta dinamika wahana yang realistis
+    \item MAVProxy: jembatan komunikasi antara pengguna dan flight stack
+\end{enumerate}
+
+\section{Hands-on 1: Daspro}
+\subsection{Log Progress}
+\begin{itemize}
+    \item 30/01/2026 8 pm - mulai pengerjaan (brainstorming dan baca spek)
+    \item 31/01/2026 1 am - selesai implementasi topic broker, node, dan simulator telemetry drone
+    \item 
+\end{itemize}
+
+\subsection{Catatan}
+\subsubsection{Brainstorming}
+\begin{itemize}
+    \item Ada 3 drone simulator berjalan secara paralel (multithreading)
+    \item Drone akan mengirim telemetry ke topic broker (publish-subscribe, drone publish data ke broker, dashboard subscribe data dari broker)
+    \item Dashboard menampilkan telemetry real time, deteksi low battery dan telemetry stale. 
+    \item Pecah task dashboard. Ada yang handle data telemetry (dengan observer pattern), ada yang handle deteksi/alert (dengan strategy pattern)
+\end{itemize}
+\subsubsection{RAII}
+RAII atau Resource Acquisition Is Initialization adalah konsep dalam pemrograman berorientasi objek yang menyatakan bahwa siklus hidup resource terikat secara langsung dengan masa hidup objek. Resource didapatkan (akuisisi) saat konstruksi objek dan dilepaskan secara otomatis saat destruksi objek. 
+
+Why use RAII? C++ tidak memiliki garbage collection otomatis. Garbage collection adalah proses internal yang melepaskan heap memory dan resource lain selama berjalannya program. Kegagalan melepaskan resource yang tidak dipakai disebut \textit{leak} atau kebocoran memori. Resource yang bocor tidak tersedia untuk program lain hingga prosesnya berakhir. 
+
+\subsubsection{Observer Pattern}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{image.png}
+\end{figure}
+Observer adalah pola desain yang menciptakan relasi one-to-many antar objek. Suatu objek utama dengan status yang menarik disebut denagn subject atau publisher. Objek-objek lain yang ingin melacak preubahan pada status objek utama disebut observers atau subscribers. Kelas publisher memiliki mekanisme subscription, yang terdiri atas sebuah array yang menyimpan referensi ke object-object subscriber dan beberapa metode public untuk operasi pada array subscribernya. Setiap kali terjadi peristiwa/perubahan penting pada publisher, ia akan menghubungi subscribernya dan memanggil metode notification khusus. 
+
+\subsubsection{Strategy Pattern}
+Kita bisa bikin policy atau aturan, yang kalau dilanggar akan memicu alert. Pattern ini lebih baik daripada menulis kode kondisional di dashboard supaya dashboard ga diotak-atik dan mudah untuk kita menambahkan aturan baru. Strategy pattern akan menyepakati bentuk kontrak untuk mengecek alert (dengan method evaluate),  tapi caranya bisa berbeda-beda (polymorphism).
+
+
+\section{Hands-on 2: MAVLink dan SITL}
+\subsection{Log Progress}
+\begin{itemize}
+    \item 30/01/2026 4 pm - selesai install + setup, lanjut ngerjain metode manual
+    \item 30/01/2026 6 pm - selesai  rekam metode manual
+    \item 31/01/2026 1 pm - lanjut ngerjain metode script/mavsdk
+    \item 31/01/2026 11 pm - selesai rekam metode script 
+    \item 31/01/2026 11 pm - selesai upload video ke youtube dan upload script ke gist
+\end{itemize}
+
+\subsection{Kendala dan Solusi}
+\textbf{Kendala:}
+\begin{itemize}
+    \item awal" aku coba run kode boilerplate just to see berhasil connect atau ga, hasilnya error message "Connection using udp:// is deprecated, please use udpin:// or udpout:// (cli\_arg.cpp:28)"
+    \item lalu aku coba udpin dan udpout tapi dua"nya masih ga connect
+    \item aku coba cari tau port pake output list, kemudian aku copas untuk gantiin yang ada di kode. tapi kendalanya masih sama.
+\end{itemize}
+
+\textbf{Solusi:}
+\begin{itemize}
+    \item Jujur ini bukan solusi sebenarnya karena aku masih gabisa connect. Lebih kayak solusi alternatif, karena deadline malam ini dan aku stuck di koneksi sekitar 3 jam.
+    \item Solusi alternatifnya adalah dengan menggunakan pymavlink. 
+    \item Bagian ini akan diupdate jika solusi utama sudah ditemukan.
+\end{itemize}
+
+\subsection{Catatan}
+Pymavlink adalah pustaka pemrosesan message MAVLink tingkat rendah, yang ditulis dalam Python. Pymavlink biasanya dipakai untuk mengimplementasikan komunikasi MAVLink di berbagai jenis sistem MAVLink, seperti GCS (MAVPROXY), Developer APIs (DroneKit), dan aplikasi MAVLink companion computer. Umumnya, MAVSDK-Python dan DroneKit-Python digunakan dalam aplikasi MAVLink untuk komunikasi dengan autopilot. 
+
+\section{THT 2}
+\subsection{Log Progress}
+\begin{itemize}
+    \item 
+\end{itemize}
 
 \newpage
 
 \section{Referensi}
 \begin{itemize}
-    \item \href{https://refactoring.guru/deisgn-patterns}{Design Patterns}
+    \item \href{https://refactoring.guru/design-patterns}{Design Patterns}
     \item \href{https://jenkov.com/tutorials/java-concurrency/producer-consumer.html}{The Producer Consumer Pattern}
+    \item \href {https://mavlink.io/en/mavgen_python/}{Using Pymavlink Libraries (mavgen)}
+    \item \href{https://learn.microsoft.com/en-us/cpp/cpp/object-lifetime-and-resource-management-modern-cpp?view=msvc-170}{Object lifetime and resource management (RAII)}
     \item PPT materi saat day pendidikan
 \end{itemize}
 

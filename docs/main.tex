@@ -25,7 +25,7 @@
 
 \title{Technical Journal}
 \author{Aurelia Jennifer Gunawan\\13524089}
-\date{Last Updated: 2026-02-03}
+\date{Last Updated: 2026-02-07}
 
 \begin{document}
 \maketitle
@@ -344,6 +344,151 @@ Arsitektur SITL memisahkan simulasi fisik dan logika kontrol drone. Gazebo untuk
     \item Gazebo harmonic: simulasi fisika dan lingkungan serta dinamika wahana yang realistis
     \item MAVProxy: jembatan komunikasi antara pengguna dan flight stack
 \end{enumerate}
+
+\subsection{Dasar-dasar Web Development}
+\subsubsection{Istilah dalam Web Development}
+\begin{itemize}
+    \item IP: Internet protocol
+    \item Port: Address untuk proses tertentu
+    \item URL: Uniform Resource Locator, alamat
+    \item HTTP: HyperText Transfer Protocol, protokol untuk web app
+    \item API: Application Programming Interface
+\end{itemize}
+\subsubsection{Arsitektur}
+Sebuah web app bekerja dengan menggunakan arsitektur client-server. Web client disini adalah browser yang berjalan di device pengguna. Sedanggkan web server adalah server yang memberi konten web apapun agar bisa diakses oleh user. Client dan server berkomunikasi melalui protokol HTTP(S).
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{fe-be.png}
+\end{figure}
+
+\subsubsection{Frontend dan Backend}
+Aplikasi web modern dibagi menjadi dua bagian utama:
+\begin{enumerate}
+    \item Frontend (sisi klien) adalah bagian yang berjalan di browser pengguna, terdiri dari:\\
+    \begin{itemize}
+        \item HTML: struktur dan konten halaman
+        \item CSS: tampilan visual halaman
+        \item JavaScript: logika interaktif dan komunikasi dengan backend
+    \end{itemize}
+    \item Backend (sisi server) adalah bagian yang berjalan di server, bertanggung jawab atas logika bisnis dan pemrosesan data. Backend menerima permintaan dari frontend melalui API, melakukan komputasi yang diperlukan, lalu mengembalikan hasilnya ke frontend.
+\end{enumerate}
+
+\subsubsection{Struktur HTTP Request}
+Sebuah request HTTP umumnya berisi:
+\begin{itemize}
+    \item Method adalah tindakan yang ingin dilakukan (misalnya GET, POST, dsb)
+    \item URL/Endpoint adalah alamat tujuan di server
+    \item Headers adalah metadata tambahan, seperti tipe konten atau informasi autentikasi
+    \item Body adalah data yang dikirimkan ke server dalam format JSON (umumnya), dan bersifat opsional
+\end{itemize}
+\\
+\textbf{Contoh sederhana:}\\
+POST /api/login HTTP/1.1\\
+Content-Type: application/json\\
+\\
+\{"email": "asep@gmail.com", "password": "rahasia"\}
+
+HTTP memiliki beberapa metode atau aksi yang menunjukkan tujuan dari sebuah permintaan. Berikut beberapa metode yang umum:
+\begin{itemize}
+    \item GET digunakan untuk mengambil data dari server, misalnya ketika browser memuat halaman web. 
+    \item POST digunakan untuk mengirim data baru ke server, seperti ketika mengisi formulir pendaftaran.
+    \item PUT digunakan untuk memperbarui data yang sudah ada di server
+    \item DELETE digunakan untuk menghapus data di server
+\end{itemize}
+Dengan metode ini, komunikasi client-server menjadi lebih terstruktur. Misalnya ketika frontend mengirimkan: \\
+POST /api/login\\
+server langsung tahu bahwa itu adalah permintaan untuk login pengguna.\\
+
+\subsubsection{Struktur HTTP Response}
+Server kemudian memberikan respons permintaan dengan pesan HTTP yang berisi: 
+\begin{itemize}
+    \item Status code menunjukkan hasil pemrosesan, misalnya 200 OK atau 404 Not Found
+    \item Headers adalah informasi tambahan seperti jenis data dan panjang konten
+    \item Body adalah data hasil pemrosesan, seringkali dalam format JSON atau HTML
+\end{itemize}
+\\
+\textbf{Contoh response:}\\
+HTTP/1.1 200 OK\\
+Content-Type: application/json\\
+\\
+\{ "status": "success", "token": "abc123xyz"\}\\
+\subsection{UI/UX}
+User Interface (UI) adalah segala sesuatu yang dapat dilihat dan berinteraksi dengan user. User Experience (UX) adalah pengalaman keseluruhan yang dialami oleh user.
+\subsubsection{Design Thinking}
+\begin{itemize}
+    \item Empathize: Memahami perasaan pengguna
+    \item Define: Menetapkan masalah yang dihadapi pengguna
+    \item Ideate: Brainstorming ide solusi/produk
+    \item Prototype: Realisasi ide produk (design)
+    \item Test: Melakukan uji coba ke user, dan melakukan revisi dari feedback
+\end{itemize}
+Tahap-tahapan design thinking bersifat iteratif, kita dapat kembali ke tahap sebelumnya berdasarkan feedback yang diterima.
+\subsubsection{Prototyping with Wireframe}
+Wireframe adalah sketsa kasaran dari suatu aplikasi, bisa dalam bentuk coret-coret di kertas atau digital.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{wireframe.png}
+\end{figure}
+\subsubsection{Designing with Figma}
+Figma adalah salah satu tools yang digunakan oleh UI/UX designer. Figma memungkinkan kolaborasi secara real time. 
+\subsection{Full Stack Development}
+\subsubsection{HTML, CSS, dan Typescript}
+HTML (HyperText Markup Language) adalah bahasa markup yang mendefinisikan kerangka dari suatu halaman web. HTML tersusun atas tag <> </> yang menjadi pembuka dan penutup daru suatu elemen. HTML bekerja seperti tree (DOM tree), ada elemen yang menjadi parent dan elemen di dalamnya yang menjadi child. 
+
+CSS (Cascading Style Sheets) adalah bahasa style sheet yang digunakan utnuk mengatur presentasi visual dari dokumen yang ditulis dalam HTML. Jika HTML adalah struktur bangunan, maka CSS adalah arsitek dan desain interiornya. CSS bekerja dengan pola selector, property, dan value. Selector memilih elemen HTML mana yang mau dihias, property menentukan apa yang mau diubah, seperti ukuran dan warna, dan value adalah nilai perubahannya. 
+
+TypeScript (TS) adalah bahasa pemrograman yang berperan sebagai otak yang mengatur perilaku halaman web tersebut agar menjadi cerdas dan interaktif. Pada dasarnya, TS mengatur apa yang terjadi jika suatu tombol diklik, bagaimana data dihitung, dan bagaimana aplikasi merespons input pengguna. 
+
+\subsubsection{Frontend in Svelte}
+Framework adalah kerangka kerja yang membantu kerjaan menjadi lebih cepat dan efisien. Aksantara menggunakan framework Svelte karena learning curvenya lebih landai dan aplikasi jauh lebih ringan dan efisien. Seluruh code di-compile menjadi vanilla di JavaScript sehingga lebih ringan dan responsif\\
+
+\textbf{Component-based Architecture}\\
+Konsep arsitektur web modern, di mana kta membangun tampilan sebuah aplikasi web bukan sebagai satu halaman web raksasa, melainkan sebagai rangkaian dari komponen-komponen kecil. Kode dibagi menjadi components dalam bentuk file .svelte. Dengan demikian, aplikasi menjadi modular karena setiap elemen di layar GCS dipisah di file-nya sendiri-sendiri. Kalau ada bug di suatu komponen UI, kita cukup cari di file yang bersesuaian dengan komponen tersebut. Component-based Architecture ini meningkatkan reusability karena kompinen yang sudah dibuat bisa dipakai berulang kali di beragam tempat tanpa menulis ulang kodenya. Setiap komponen bersifat self-contained sehingga tidak saling mengganggu komponen lain. \\
+
+\textbf{State Handling}\\
+State handling adalah cara menyimpan data dari backend yang kemudian ditampilkan di layar. Pada dasarnya, state adalah sebuah variabel. State bisa bersifat lokal, yakni hanya dipakai oleh internal dari suatu komponen saja. Jika state dibutuhkan oleh banyak komponen, kita bisa mendefinisikan sebuah store yang menyimpan data di luar komponen (mirip variabel lokal). Contoh penggunaannya adalah ketika data altitude dibutuhkan oleh peta, panel navigasi, dan notifikasi atau alert, kita cukup menyimpan data telemetri di satu store lalu tiap komponen yang membutuhkannya tinggal subscribe ka sana. 
+
+\subsubsection{Backend with Go and Python}
+Go/Golang adalah bahasa yang dikembangkan Google untuk performa tinggi karena mampu menangani concurrency dengan performa tinggi. Go bersifat type-safe dan mempunyai sintaks yang sederhana. Go digunakan untuk menangani data telemetri dan mengatur lalu lintas data dengan frontend (websockets). 
+
+Python adalah bahasa yang sering digunakan di dunia robotika dan AI. Python memiliki banyak library dan sintaks yang sederhana. Python digunakan untuk pemrosesan berat seperti object detection. 
+
+API adalah cara frontend berkomunikasi dengan frontend. Pada dasarnya, API adalah sekumpulan aturan dan protokol yang memungkinkan dua aplikasi saling berkomunikasi dengan skema request-response. Request yang dikirim oleh frontend tersusun atas method, endpoint, dan payload.
+\begin{itemize}
+    \item Method adalah jenis tindakan seperti GET, POST, PUT, dan DELETE
+    \item Endpoint adalah alamat API tujuan seperti /api/telemetry, /api/command/arm, dsb.
+    \item Payload adalah data tambahan, umumnya berformat JSON
+\end{itemize}
+Response tersusun atas status code (200 OK, 404 Not Found) dan data yang diminta jika ada. 
+
+Websockets digunakan untuk bisa menerima pesan telemetri dari wahana dan mengirimkan command atau waypoints. Koneksi antara frontend dan backend dialin dengan HTTP yang bersifat request-response, di mana frontend harus minta dulu baru dijawab oleh backend. Dalam kasus di mana kita ingin status baterai wahana di-update setiap milidetik, frontend harus melakukan ribuan request per menit. Hal ini boros dan akan menyebabkan delay yang tinggi. 
+
+Websocket adalah teknologi ang memungkinkan kita untuk menjalin komunikasi dua arah (bidirectional) secara simultan lewat satu koneksi yang tetap terbuka (persistent). denagn demikian, begitu ada data telemetry, backend langsung menyemburkan datanya ke frontend dengan latensi rendah. 
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{websocket.png}
+\end{figure}
+
+\subsubsection{Deployment with Docker}
+Docker adalah kakas yang membungkus aplikasi, library, dan konfigurasi sebagai suatu container. Container mirip seperti virtual machine, tapi meminjam kernel dari OS utama perangkat kita sehingga lebih ringan. Container memiliki filesystem dan jaringannya sendiri. Container memungkinkan kita untuk menjalankan aplikasi-aplikasi dengan environment, seperti OS, versi library, dsb., yang seragam tanpa perlu meng-install secara manual di laptop kita. 
+
+Cara kerja Docker adalah kita membuat image sebagai blueprint yang mendeskripsikan apa saja library dan kode yang terdapat dalam container kita nantinya. Berdasarkan image tersebut, Docker membangun container yang diinginkan. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{docker.png}
+\end{figure}
+
+Dockerfile adalah file teks sederhana tempat kita menulis instruksi untuk membuat image. Dengan Dockerfile, kita bisa menjamin semua orang enggunakan environment yang saa ketika menjalankan aplikasi. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\linewidth]{dockerfile.png}
+\end{figure}
+
+Docker compose memungkinkan kita untuk menjalankan banyak container dalam sekali jalan berdasarkan dockerfiles yang sudah dibuat (sehingga kita ga perlu repot jalanin satu per satu frontend, backend, dan database). Kita cukup membuat sebuah file docker-compose.yml untuk menentukan container mana dijalankan di port yang mana. 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{docker compose.png}
+\end{figure}
 
 \section{Hands-on 1: Daspro}
 \subsection{Log Progress}
